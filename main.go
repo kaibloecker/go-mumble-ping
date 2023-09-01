@@ -27,7 +27,14 @@ func main() {
 
 	router.GET("/", cache.CacheByRequestURI(memoryStore, 15*time.Second), getMumbleData)
 
-	if err := router.Run(":8080"); err != nil {
+	port := "8080"
+	value, ok := os.LookupEnv("PORT")
+	if ok {
+		port = value
+	}
+	address := fmt.Sprintf(":%s", port)
+
+	if err := router.Run(address); err != nil {
 		panic(err)
 	}
 }

@@ -3,6 +3,7 @@
 Microservice that translates the [Mumble Ping](https://wiki.mumble.info/wiki/Protocol) to JSON.
 
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/kaibloecker/go-mumble-ping)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kaibloecker/go-mumble-ping)](https://goreportcard.com/report/github.com/kaibloecker/go-mumble-ping)
 ![License](https://img.shields.io/github/license/kaibloecker/go-mumble-ping)
 ![GitHub issues](https://img.shields.io/github/issues-raw/kaibloecker/go-mumble-ping)
 ![GitHub last commit](https://img.shields.io/github/last-commit/kaibloecker/go-mumble-ping)
@@ -45,9 +46,10 @@ All configuration is done via environment variables.
 
 ### Environment Variables
 
-| Variable | Description                         |
-| -------- | ----------------------------------- |
-| `HOST`   | The hostname of your mumble server. |
+| Variable | Description                                              |
+| -------- | -------------------------------------------------------- |
+| `HOST`   | The hostname of your mumble server.                      |
+| `PORT`   | The port go-mumble-ping will listen on, default is 8080. |
 
 
 ## Project Status
