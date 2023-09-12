@@ -46,10 +46,11 @@ All configuration is done via environment variables.
 
 ### Environment Variables
 
-| Variable | Description                                              |
-| -------- | -------------------------------------------------------- |
-| `HOST`   | The hostname of your mumble server.                      |
-| `PORT`   | The port go-mumble-ping will listen on, default is 8080. |
+| Variable      | Description                                                  |
+| ------------- | ------------------------------------------------------------ |
+| `MUMBLE_HOST` | The hostname of your mumble server, defaults to `localhost`. |
+| `MUMBLE_PORT` | The port of your mumble server, defaults to `64738`.         |
+| `PORT`        | The port go-mumble-ping will listen on, defaults to `8080`.  |
 
 
 ## Project Status

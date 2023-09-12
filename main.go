@@ -40,7 +40,12 @@ func main() {
 }
 
 func getMumbleData(c *gin.Context) {
-	server, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%v:%d", os.Getenv("HOST"), 64738))
+	mumblePort := "64738"
+	if v, ok := os.LookupEnv("MUMBLE_PORT"); ok {
+		mumblePort = v
+	}
+
+	server, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%s", os.Getenv("MUMBLE_HOST"), mumblePort))
 	if err != nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"message": err.Error()})
 		return
