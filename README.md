@@ -55,7 +55,7 @@ All configuration is done via environment variables.
 
 ## Project Status
 
-This project is brand new and in active development. Nothing here is stable in any way.
+The basic functionality is stable. No further development to be expected.
 
 
 ## Contributing

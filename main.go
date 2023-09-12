@@ -28,9 +28,8 @@ func main() {
 	router.GET("/", cache.CacheByRequestURI(memoryStore, 15*time.Second), getMumbleData)
 
 	port := "8080"
-	value, ok := os.LookupEnv("PORT")
-	if ok {
-		port = value
+	if val, ok := os.LookupEnv("PORT"); ok {
+		port = val
 	}
 	address := fmt.Sprintf(":%s", port)
 
@@ -41,8 +40,8 @@ func main() {
 
 func getMumbleData(c *gin.Context) {
 	mumblePort := "64738"
-	if v, ok := os.LookupEnv("MUMBLE_PORT"); ok {
-		mumblePort = v
+	if val, ok := os.LookupEnv("MUMBLE_PORT"); ok {
+		mumblePort = val
 	}
 
 	server, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%s", os.Getenv("MUMBLE_HOST"), mumblePort))
@@ -62,15 +61,13 @@ func getMumbleData(c *gin.Context) {
 	identifier := uint64(time.Now().Unix())
 	ping := make([]byte, 12)
 	binary.BigEndian.PutUint64(ping[4:], identifier)
-	_, err = conn.Write(ping)
-	if err != nil {
+	if _, err = conn.Write(ping); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 
 	received := make([]byte, 24)
-	_, err = conn.Read(received)
-	if err != nil {
+	if _, err = conn.Read(received); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
