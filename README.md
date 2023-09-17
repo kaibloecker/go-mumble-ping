@@ -2,7 +2,9 @@
 
 Microservice that translates the [Mumble Ping](https://wiki.mumble.info/wiki/Protocol) to JSON.
 
+[![Build](https://github.com/kaibloecker/go-mumble-ping/actions/workflows/build.yml/badge.svg)](https://github.com/kaibloecker/go-mumble-ping/actions/workflows/go.yml)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/kaibloecker/go-mumble-ping)
+[![Go Reference](https://pkg.go.dev/badge/github.com/kaibloecker/go-mumble-ping@v1.0.1.svg)](https://pkg.go.dev/github.com/kaibloecker/go-mumble-ping@v1.0.1)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kaibloecker/go-mumble-ping)](https://goreportcard.com/report/github.com/kaibloecker/go-mumble-ping)
 ![License](https://img.shields.io/github/license/kaibloecker/go-mumble-ping)
 ![GitHub issues](https://img.shields.io/github/issues-raw/kaibloecker/go-mumble-ping)
