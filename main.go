@@ -2,15 +2,13 @@ package main
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"os"
 	"time"
-
-	cache "github.com/chenyahui/gin-cache"
-	"github.com/chenyahui/gin-cache/persist"
-	"github.com/gin-gonic/gin"
 )
 
 type Pong struct {
@@ -21,38 +19,41 @@ type Pong struct {
 	Bandwidth      uint32 `json:"bandwidth"`
 }
 
+var (
+	MUMBLE_HOST = "localhost"
+	MUMBLE_PORT = "64738"
+	PORT        = "8080"
+)
+
 func main() {
-	router := gin.Default()
-	memoryStore := persist.NewMemoryStore(1 * time.Minute)
-
-	router.GET("/", cache.CacheByRequestURI(memoryStore, 15*time.Second), getMumbleData)
-
-	port := "8080"
-	if val, ok := os.LookupEnv("PORT"); ok {
-		port = val
+	if val, ok := os.LookupEnv("MUMBLE_HOST"); ok {
+		MUMBLE_HOST = val
 	}
-	address := fmt.Sprintf(":%s", port)
+	if val, ok := os.LookupEnv("MUMBLE_PORT"); ok {
+		MUMBLE_PORT = val
+	}
+	if val, ok := os.LookupEnv("PORT"); ok {
+		PORT = val
+	}
+	address := fmt.Sprintf(":%s", PORT)
 
-	if err := router.Run(address); err != nil {
-		panic(err)
+	http.HandleFunc("/", getMumbleData)
+
+	if err := http.ListenAndServe(address, nil); err != nil {
+		log.Fatal(err)
 	}
 }
 
-func getMumbleData(c *gin.Context) {
-	mumblePort := "64738"
-	if val, ok := os.LookupEnv("MUMBLE_PORT"); ok {
-		mumblePort = val
-	}
-
-	server, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%s", os.Getenv("MUMBLE_HOST"), mumblePort))
+func getMumbleData(w http.ResponseWriter, req *http.Request) {
+	server, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%s", MUMBLE_HOST, MUMBLE_PORT))
 	if err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"message": err.Error()})
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	conn, err := net.DialUDP("udp", nil, server)
 	if err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"message": err.Error()})
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer conn.Close()
@@ -62,13 +63,13 @@ func getMumbleData(c *gin.Context) {
 	ping := make([]byte, 12)
 	binary.BigEndian.PutUint64(ping[4:], identifier)
 	if _, err = conn.Write(ping); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	received := make([]byte, 24)
 	if _, err = conn.Read(received); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -81,9 +82,15 @@ func getMumbleData(c *gin.Context) {
 	}
 
 	if pong.Ident != identifier {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "received scrambled data"})
+		http.Error(w, "received scrambled data", http.StatusInternalServerError)
 		return
 	}
 
-	c.JSON(http.StatusOK, pong)
+	pongJSON, err := json.Marshal(pong)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "%v", string(pongJSON))
 }
