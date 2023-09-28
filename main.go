@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -23,6 +24,9 @@ var (
 	MUMBLE_HOST = "localhost"
 	MUMBLE_PORT = "64738"
 	PORT        = "8080"
+	pong        = Pong{}
+	mu          = sync.RWMutex{}
+	cacheTTL    = 15 * time.Second
 )
 
 func main() {
@@ -45,6 +49,19 @@ func main() {
 }
 
 func getMumbleData(w http.ResponseWriter, req *http.Request) {
+	if cacheAlive() {
+		pongJSON, err := json.Marshal(pong)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprintf(w, "%v", string(pongJSON))
+		return
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
 	server, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%s", MUMBLE_HOST, MUMBLE_PORT))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -73,7 +90,7 @@ func getMumbleData(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pong := Pong{
+	newPong := Pong{
 		Version:        fmt.Sprintf("%d.%d.%d", received[1], received[2], received[3]),
 		Ident:          binary.BigEndian.Uint64(received[4:12]),
 		ConnectedUsers: binary.BigEndian.Uint32(received[12:16]),
@@ -81,16 +98,23 @@ func getMumbleData(w http.ResponseWriter, req *http.Request) {
 		Bandwidth:      binary.BigEndian.Uint32(received[20:24]),
 	}
 
-	if pong.Ident != identifier {
+	if newPong.Ident != identifier {
 		http.Error(w, "received scrambled data", http.StatusInternalServerError)
 		return
 	}
 
-	pongJSON, err := json.Marshal(pong)
+	pongJSON, err := json.Marshal(newPong)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	fmt.Fprintf(w, "%v", string(pongJSON))
+	pong = newPong
+}
+
+func cacheAlive() bool {
+	mu.RLock()
+	defer mu.RUnlock()
+	return !time.Now().Add(-cacheTTL).After(time.Unix(int64(pong.Ident), 0))
 }
